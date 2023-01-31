@@ -10,7 +10,7 @@ The goal of this project is create a server capable of hosting multiple connecti
 
 ### Involvement
 
-This is an solo academic assignment completed by me. Some starter code including header files and empty functions were supplied by the professor but most of the code is written after by me. This project is included to demonstrate proficiency in C programming as well as experience in socket programming.
+This is a solo academic assignment completed by me. Some starter code including header files and empty functions were supplied by the professor but most of the code is written after by me. This project is included to demonstrate proficiency in C programming as well as experience in socket programming.
 
 ### Code Highlights
 The project directory is small and made up of only a few scripts. The following scripts are written by me unless otherwise stated. The exception are the header files which are given as starter code.
