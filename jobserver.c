@@ -18,9 +18,6 @@
 #define JOBS_DIR "jobs/"
 #endif
 
-//includes code from t11
-//includes code from t12
-
 Client client[MAX_CLIENTS];
 
 JobList j_list;
@@ -33,6 +30,9 @@ int sigint_received;
 struct stat stat_buf;
 int status;
 
+/*
+ * Author: Roy Lu
+*/
 int setup_new_client(int fd, Client *clients) {
 	int user_index = 0;
 	while (user_index < MAX_CLIENTS && clients[user_index].socket_fd != -1) {
@@ -57,6 +57,10 @@ int remove_client(int fd, int client_index, Client *clients, JobList *j_list) {
 	return 0;
 }
 
+/*
+ * Read the file descriptor and executes the clients command 
+ * Author: Roy Lu
+*/
 int process_client_request(Client *client, JobList *j_list, fd_set *all_fds) {
 	int fd = client->socket_fd;
     int num_read;
@@ -97,7 +101,6 @@ int process_client_request(Client *client, JobList *j_list, fd_set *all_fds) {
 					num_args++;
 				}
 
-				//ideally pass it in but not quite working
 		    	char *args[num_args];
 		    	args[num_args-1] = '\0';
 		    	args[0] = job;
@@ -186,6 +189,9 @@ int process_client_request(Client *client, JobList *j_list, fd_set *all_fds) {
 	return 0;
 }
 
+/*
+ * Author: Roy Lu
+*/
 void process_job_output(JobNode *node, int fd, Buffer *buffer) {	
 	int num_read;
 	char format[BUF_SIZE] = "";
@@ -237,6 +243,9 @@ void process_job_output(JobNode *node, int fd, Buffer *buffer) {
 	}
 }
 
+/*
+ * Author: Roy Lu
+*/
 int process_dead_children(JobList *j_list, fd_set *all_fds) {
 	JobNode *job = j_list->first;
 	JobNode *temp = NULL;
@@ -290,6 +299,9 @@ int process_jobs(JobList *j_list, fd_set *listen_fds, fd_set *all_fds) {
 	return 0;
 }
 
+/*
+ * Author: Roy Lu
+*/
 int get_highest_fd(int listen_fd, Client *clients, JobList *j_list) {
 	int max_fd = listen_fd;
 	for (int index = 0; index < MAX_CLIENTS; index++) {
@@ -312,6 +324,9 @@ int get_highest_fd(int listen_fd, Client *clients, JobList *j_list) {
 	return max_fd;
 }
 
+/*
+ * Author: Roy Lu
+*/
 void clean_exit(int listen_fd, Client *clients, JobList *j_list, int exit_status) {
 	char message[BUF_SIZE];
 	for (int index = 0; index < MAX_CLIENTS; index++) {
@@ -326,22 +341,31 @@ void clean_exit(int listen_fd, Client *clients, JobList *j_list, int exit_status
 	exit(exit_status);
 }
 
+
 /* SIGINT handler:
  * We are just raising the sigint_received flag here. Our program will
  * periodically check to see if this flag has been raised, and any necessary
  * work will be done in main() and/or the helper functions. Write your signal 
  * handlers with care, to avoid issues with async-signal-safety.
+ * 
+ * Author: University of Toronto
+ * 
  */
 void sigint_handler(int code) {	
     sigint_received = 1;
 }
 
+/*
+ * Author: Roy Lu
+*/
 void sigchild_handler(int sig, siginfo_t *siginfo, void *context) {
     mark_job_dead(&j_list, siginfo->si_pid);
 }
 
 
-
+/*
+ * Author: University of Toronto, Roy Lu
+*/
 int main(void) {
 	sigint_received = 0;
 	// SIGINT HANDLER
@@ -372,22 +396,24 @@ int main(void) {
 	 * Forward messages from jobs to appropriate clients.
 	 * Tear down cleanly.
 	 */
-	Client clients[MAX_CLIENTS];
-	j_list.first = NULL;
-	j_list.count = 0;
-	buffer.inbuf = 0;
-	buffer.consumed = sizeof(buffer.buf);
-	buffer.after = buffer.buf;
+	Client clients[MAX_CLIENTS]; // Author: Roy Lu
+	j_list.first = NULL; // Author: Roy Lu
+	j_list.count = 0; // Author: Roy Lu
+	buffer.inbuf = 0; // Author: Roy Lu
+	buffer.consumed = sizeof(buffer.buf); // Author: Roy Lu
+	buffer.after = buffer.buf; // Author: Roy Lu
 
-	for (int index = 0; index < MAX_CLIENTS; index++) {
+	for (int index = 0; index < MAX_CLIENTS; index++) { // Author: Roy Lu
 		clients[index].socket_fd = -1;
 	}
 
-	int max_fd = socket_fd;
-	fd_set all_fds, listen_fds;
-	FD_ZERO(&all_fds);
-	FD_SET(socket_fd, &all_fds);
+	int max_fd = socket_fd; // Author: Roy Lu
+	fd_set all_fds, listen_fds; // Author: Roy Lu
+	FD_ZERO(&all_fds); // Author: Roy Lu
+	FD_SET(socket_fd, &all_fds); // Author: Roy Lu
 
+	// Socket listening loop
+	// Author: Roy Lu
 	while (sigint_received == 0) {
 		listen_fds = all_fds;
 		int nready = select(max_fd + 1, &listen_fds, NULL, NULL, NULL);
@@ -397,7 +423,6 @@ int main(void) {
 			exit(1);
 		}
 
-		// Is it the original socket? Create a new connection ...
 		if (FD_ISSET(socket_fd, &listen_fds)) {
 			int client_fd = setup_new_client(socket_fd, clients);
 			if (client_fd < 0) {
@@ -427,6 +452,7 @@ int main(void) {
 		}
 		process_jobs(&j_list, &listen_fds, &all_fds);
 	}
+
 	free(self);
 	clean_exit(socket_fd, clients, &j_list, 0);
 	return 0;
